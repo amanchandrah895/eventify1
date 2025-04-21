@@ -1,8 +1,8 @@
-name: Node.js CI
+name: Smoke Test
 on: [push]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     
     steps:
@@ -12,17 +12,19 @@ jobs:
       with:
         node-version: 18
         
-    - name: Install dependencies (root)
+    - name: Install root dependencies
       run: npm ci
-      working-directory: ./  # Explicit root directory
       
-    - name: Install dependencies (api)
-      if: exists('api/package.json')  # Only run if api exists
+    - name: Install API dependencies
+      if: exists('api/package.json')  # Only run if API exists
       run: npm ci
-      working-directory: ./api
+      working-directory: ./api  # Correct path
       
-    - name: Create .env
-      run: echo "MONGO_URI=${{ secrets.MONGO_URI }}" > ./api/.env
-      
+    - name: Load environment
+      run: |
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" > api/.env
+        echo "NODE_ENV=test" >> api/.env
+        
     - name: Run tests
       run: npm test
+      working-directory: ./api  # Run from API directory
